@@ -1,8 +1,7 @@
 import pygame as pg
 
-from settings import SCREENRECT
+from config.settings import SCREENRECT
 from utils.load import load_image
-
 class Tank(pg.sprite.Sprite):
     speed = 10
     bounce = 24

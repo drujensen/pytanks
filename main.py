@@ -7,7 +7,7 @@ from sprites.explosion import Explosion
 from sprites.shot import Shot
 from sprites.score import Score
 from sprites.wall import Wall
-from settings import SCREENRECT, MAX_SHOTS
+from config.settings import SCREENRECT, MAX_SHOTS
 from utils.load import load_image, load_sound
 
 if not pg.image.get_extended():
