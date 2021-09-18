@@ -15,6 +15,7 @@ if not pg.image.get_extended():
 
 # game constants
 SCORE = 0
+black = (0,0,0)
 
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 
@@ -36,16 +37,14 @@ def main(winstyle=0):
     screen = pg.display.set_mode(SCREENRECT.size, winstyle, bestdepth)
 
     # decorate the game window
-    icon = pg.transform.scale(load_image("tank.gif"), (32, 32))
+    icon = pg.transform.scale(load_image("blue-tank-2.png"), (32, 32))
     pg.display.set_icon(icon)
     pg.display.set_caption("Tanks")
     pg.mouse.set_visible(0)
 
     # create the background, tile the bgd image
-    bgdtile = load_image("background.gif")
     background = pg.Surface(SCREENRECT.size)
-    for x in range(0, SCREENRECT.width, bgdtile.get_width()):
-        background.blit(bgdtile, (x, 0))
+    background.fill(black)
     screen.blit(background, (0, 0))
     pg.display.flip()
 
@@ -70,17 +69,18 @@ def main(winstyle=0):
     Explosion.containers = all
     Score.containers = all
 
-
-    global SCORE
+    score = Score()
     tank = Tank()
+    Wall()
+    Wall()
     Wall()
     
     clock = pg.time.Clock()
 
     if pg.font:
-        all.add(Score())
+        all.add(score)
 
-    while SCORE < 5:
+    while score.SCORE < 5:
 
         # get input
         for event in pg.event.get():
@@ -113,17 +113,18 @@ def main(winstyle=0):
         all.update()
 
         # handle player input
-        direction = keystate[pg.K_RIGHT] - keystate[pg.K_LEFT]
-        tank.move(direction)
+        direction = keystate[pg.K_UP] - keystate[pg.K_DOWN]
+        rotation = keystate[pg.K_RIGHT] - keystate[pg.K_LEFT]
+        tank.move(direction, rotation)
         firing = keystate[pg.K_SPACE]
         if not tank.reloading and firing and len(shots) < MAX_SHOTS:
-            Shot(tank.gunpos())
+            Shot(tank.rect, tank.rotation)
             if pg.mixer:
                 shoot_sound.play()
         tank.reloading = firing
 
         # Detect collisions between tank and walls.
-        for wall in pg.sprite.spritecollide(tank, walls, 1):
+        for wall in pg.sprite.spritecollide(tank, walls, 0):
             if pg.mixer:
                 boom_sound.play()
             Explosion(wall)
@@ -133,12 +134,13 @@ def main(winstyle=0):
             if pg.mixer:
                 boom_sound.play()
             Explosion(wall)
+            score.SCORE += 1
 
-        # See if shots hit the tanks.
-        for tank in pg.sprite.groupcollide(shots, tanks, 1, 1).keys():
-            if pg.mixer:
-                boom_sound.play()
-            Explosion(tank)
+        # # See if shots hit the tanks.
+        # for tank in pg.sprite.groupcollide(shots, tanks, 0, 0).keys():
+        #     if pg.mixer:
+        #         boom_sound.play()
+        #     Explosion(tank)
 
         # draw the scene
         dirty = all.draw(screen)

@@ -3,32 +3,67 @@ import pygame as pg
 from config.settings import SCREENRECT
 from utils.load import load_image
 class Tank(pg.sprite.Sprite):
-    speed = 10
-    bounce = 24
-    gun_offset = -11
+    speed = 5
+    rotation = 90 # 0 to 359.  0 is north, 90 is east, 180 is south, 270 is west
+    direction = 0 # -1 to 1.  -1 is backward, 0 is not moving, 1 is forward
+    color = (255,0,0)
+    size = (20, 20)
+    images = []
 
     def __init__(self):
         pg.sprite.Sprite.__init__(self, self.containers)
-        img = load_image("tank.gif")
-        self.images = [img, pg.transform.flip(img, 1, 0)]
-
-        self.image = self.images[0]
-        self.rect = self.image.get_rect(midbottom=SCREENRECT.midbottom)
+        self.images = [load_image(im) for im in ("blue-tank-0.png", "blue-tank-1.png", "blue-tank-2.png", "blue-tank-3.png", "blue-tank-4.png", "blue-tank-5.png", "blue-tank-6.png", "blue-tank-7.png" )]
+        self.image = self.images[2]
+        self.rect = self.image.get_rect()
+        self.rect.center=[0, (SCREENRECT.height / 2) - self.rect.height]
         self.reloading = 0
         self.origtop = self.rect.top
-        self.facing = -1
 
-    def move(self, direction):
+    def move(self, direction, rotation):
+        if rotation:
+            self.rotation += rotation * self.speed
+            if self.rotation > 359: self.rotation = 0
+            if self.rotation < 0: self.rotation = 359
         if direction:
-            self.facing = direction
-        self.rect.move_ip(direction * self.speed, 0)
-        self.rect = self.rect.clamp(SCREENRECT)
-        if direction < 0:
+            self.direction = direction
+        else:
+            self.direction = 0
+        
+        if self.rotation >= 0:
             self.image = self.images[0]
-        elif direction > 0:
+            x = 0
+            y = -1
+        if self.rotation >= 45:
             self.image = self.images[1]
-        self.rect.top = self.origtop - (self.rect.left // self.bounce % 2)
+            x = 1
+            y = -1
+        if self.rotation >= 90:
+            self.image = self.images[2]
+            x = 1
+            y = 0
+        if self.rotation >= 135:
+            self.image = self.images[3]
+            x = 1
+            y = 1
+        if self.rotation >= 180:
+            self.image = self.images[4]
+            x = 0
+            y = 1
+        if self.rotation >= 225:
+            self.image = self.images[5]
+            x = -1
+            y = 1
+        if self.rotation >= 270:
+            self.image = self.images[6]
+            x = -1
+            y = 0
+        if self.rotation >= 315:
+            self.image = self.images[7]
+            x = -1
+            y = -1
+
+        self.rect.move_ip(x * self.direction * self.speed, y * self.direction * self.speed)
+        self.rect = self.rect.clamp(SCREENRECT)
 
     def gunpos(self):
-        pos = self.facing * self.gun_offset + self.rect.centerx
-        return pos, self.rect.top
+        return self.rect
