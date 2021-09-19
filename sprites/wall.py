@@ -5,7 +5,7 @@ from utils.load import load_image
 from random import randint
 class Wall(pg.sprite.Sprite):
     images = []
-    buffer = 100
+    buffer = 110
 
     def __init__(self):
         pg.sprite.Sprite.__init__(self, self.containers)

@@ -16,7 +16,7 @@ class Shot(pg.sprite.Sprite):
         self.image = self.images[2]
         self.rect = self.image.get_rect()
         self.rotation = rotation
-        self.rect.center = pos.center
+        self.rect.center = pos
 
     def update(self):
         if self.rotation >= 0:

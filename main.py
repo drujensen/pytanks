@@ -2,7 +2,8 @@ import random
 import os
 import pygame as pg
 
-from sprites.tank import Tank
+from sprites.bluetank import BlueTank
+from sprites.redtank import RedTank
 from sprites.explosion import Explosion
 from sprites.shot import Shot
 from sprites.score import Score
@@ -65,12 +66,14 @@ def main(winstyle=0):
     # assign default groups to each sprite class
     Wall.containers = walls, all
     Shot.containers = shots, all
-    Tank.containers = tanks, all
+    BlueTank.containers = tanks, all
+    RedTank.containers = tanks, all
     Explosion.containers = all
     Score.containers = all
 
     score = Score()
-    tank = Tank()
+    bluetank = BlueTank()
+    redtank = RedTank()
     Wall()
     Wall()
     Wall()
@@ -112,19 +115,30 @@ def main(winstyle=0):
         all.clear(screen, background)
         all.update()
 
-        # handle player input
-        direction = keystate[pg.K_UP] - keystate[pg.K_DOWN]
-        rotation = keystate[pg.K_RIGHT] - keystate[pg.K_LEFT]
-        tank.move(direction, rotation)
+        # handle blue player input
+        direction = keystate[pg.K_w] - keystate[pg.K_s]
+        rotation = keystate[pg.K_d] - keystate[pg.K_a]
+        bluetank.move(direction, rotation)
         firing = keystate[pg.K_SPACE]
-        if not tank.reloading and firing and len(shots) < MAX_SHOTS:
-            Shot(tank.rect, tank.rotation)
+        if not bluetank.reloading and firing and len(shots) < MAX_SHOTS:
+            Shot(bluetank.gunpos, bluetank.rotation)
             if pg.mixer:
                 shoot_sound.play()
-        tank.reloading = firing
+        bluetank.reloading = firing
 
-        # Detect collisions between tank and walls.
-        for wall in pg.sprite.spritecollide(tank, walls, 0):
+        # handle red player input
+        direction = keystate[pg.K_UP] - keystate[pg.K_DOWN]
+        rotation = keystate[pg.K_RIGHT] - keystate[pg.K_LEFT]
+        redtank.move(direction, rotation)
+        firing = keystate[pg.K_RETURN]
+        if not redtank.reloading and firing and len(shots) < MAX_SHOTS:
+            Shot(redtank.gunpos, redtank.rotation)
+            if pg.mixer:
+                shoot_sound.play()
+        redtank.reloading = firing
+
+        # Detect collisions between tanks and walls.
+        for wall in pg.sprite.groupcollide(tanks, walls, 0, 0).keys():
             if pg.mixer:
                 boom_sound.play()
             Explosion(wall)
