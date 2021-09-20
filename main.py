@@ -148,13 +148,13 @@ def main(winstyle=0):
             if pg.mixer:
                 boom_sound.play()
             Explosion(wall)
-            score.SCORE += 1
 
         # # See if shots hit the tanks.
-        # for tank in pg.sprite.groupcollide(shots, tanks, 0, 0).keys():
-        #     if pg.mixer:
-        #         boom_sound.play()
-        #     Explosion(tank)
+        for tank in pg.sprite.groupcollide(shots, tanks, 1, 0).keys():
+            if pg.mixer:
+                boom_sound.play()
+            Explosion(tank)
+            score.SCORE += 1
 
         # draw the scene
         dirty = all.draw(screen)
