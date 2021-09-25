@@ -5,7 +5,8 @@ import pygame as pg
 from sprites.bluetank import BlueTank
 from sprites.redtank import RedTank
 from sprites.explosion import Explosion
-from sprites.shot import Shot
+from sprites.blueshot import BlueShot
+from sprites.redshot import RedShot
 from sprites.score import Score
 from sprites.wall import Wall
 from config.settings import SCREENRECT, MAX_SHOTS
@@ -60,18 +61,24 @@ def main(winstyle=0):
     # Initialize Game Groups
     walls = pg.sprite.Group()
     shots = pg.sprite.Group()
+    redshots = pg.sprite.Group()
+    blueshots = pg.sprite.Group()
     tanks = pg.sprite.Group()
+    redtanks = pg.sprite.Group()
+    bluetanks = pg.sprite.Group()
     all = pg.sprite.RenderUpdates()
 
     # assign default groups to each sprite class
     Wall.containers = walls, all
-    Shot.containers = shots, all
-    BlueTank.containers = tanks, all
-    RedTank.containers = tanks, all
+    BlueShot.containers = blueshots, shots, all
+    RedShot.containers = redshots, shots, all
+    BlueTank.containers = bluetanks, tanks, all
+    RedTank.containers = redtanks, tanks, all
     Explosion.containers = all
     Score.containers = all
 
-    score = Score()
+    bluescore = Score(leftside=True)
+    redscore = Score(leftside=False)
     bluetank = BlueTank()
     redtank = RedTank()
     Wall()
@@ -81,9 +88,10 @@ def main(winstyle=0):
     clock = pg.time.Clock()
 
     if pg.font:
-        all.add(score)
+        all.add(bluescore)
+        all.add(redscore)
 
-    while score.SCORE < 5:
+    while True:
 
         # get input
         for event in pg.event.get():
@@ -120,8 +128,8 @@ def main(winstyle=0):
         rotation = keystate[pg.K_d] - keystate[pg.K_a]
         bluetank.move(direction, rotation)
         firing = keystate[pg.K_SPACE]
-        if not bluetank.reloading and firing and len(shots) < MAX_SHOTS:
-            Shot(bluetank.gunpos, bluetank.rotation)
+        if not bluetank.reloading and firing and len(blueshots) < MAX_SHOTS:
+            BlueShot(bluetank.gunpos, bluetank.rotation)
             if pg.mixer:
                 shoot_sound.play()
         bluetank.reloading = firing
@@ -131,17 +139,26 @@ def main(winstyle=0):
         rotation = keystate[pg.K_RIGHT] - keystate[pg.K_LEFT]
         redtank.move(direction, rotation)
         firing = keystate[pg.K_RETURN]
-        if not redtank.reloading and firing and len(shots) < MAX_SHOTS:
-            Shot(redtank.gunpos, redtank.rotation)
+        if not redtank.reloading and firing and len(redshots) < MAX_SHOTS:
+            RedShot(redtank.gunpos, redtank.rotation)
             if pg.mixer:
                 shoot_sound.play()
         redtank.reloading = firing
 
         # Detect collisions between tanks and walls.
-        for wall in pg.sprite.groupcollide(tanks, walls, 0, 0).keys():
+        for wall in pg.sprite.groupcollide(redtanks, walls, 0, 0).keys():
             if pg.mixer:
                 boom_sound.play()
             Explosion(wall)
+            if redscore.SCORE > 0:
+                redscore.SCORE -= 1
+
+        for wall in pg.sprite.groupcollide(bluetanks, walls, 0, 0).keys():
+            if pg.mixer:
+                boom_sound.play()
+            Explosion(wall)
+            if bluescore.SCORE > 0:
+                bluescore.SCORE -= 1
 
         # See if shots hit the walls.
         for wall in pg.sprite.groupcollide(shots, walls, 1, 0).keys():
@@ -149,12 +166,19 @@ def main(winstyle=0):
                 boom_sound.play()
             Explosion(wall)
 
-        # # See if shots hit the tanks.
-        for tank in pg.sprite.groupcollide(shots, tanks, 1, 0).keys():
+        # # See if red shots hit the blue tanks.
+        for tank in pg.sprite.groupcollide(redshots, bluetanks, 1, 0).keys():
             if pg.mixer:
                 boom_sound.play()
             Explosion(tank)
-            score.SCORE += 1
+            redscore.SCORE += 1
+
+        # # See if blue shots hit the red tanks.
+        for tank in pg.sprite.groupcollide(blueshots, redtanks, 1, 0).keys():
+            if pg.mixer:
+                boom_sound.play()
+            Explosion(tank)
+            bluescore.SCORE += 1
 
         # draw the scene
         dirty = all.draw(screen)
